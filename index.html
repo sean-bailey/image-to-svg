@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Online Image to SVG Converter</title>
+        <head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+</head>
+
+        <script>
+
+
+    const upload_download_url = '<INSERT POSTURLGENERATOR ENPOINT HERE>'
+    const process_url="<INSERT PROCESSFUNCTION ENPOINT HERE>"
+    const imageuploadform=document.getElementById('imageupload');
+    const submit_form=document.getElementById('submitform');
+
+    var inspectme="";
+
+    function createGuid()
+    {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c)
+    {
+        var r = Math.random()*16|0, v = c === 'x' ? r : (r&0x3|0x8);
+        return v.toString(16);
+    });
+    }
+
+    function wait(ms){
+       var start = new Date().getTime();
+       var end = start;
+       while(end < start + ms) {
+         end = new Date().getTime();
+      }
+    }
+
+
+    function download_image(origname, custname)
+    {
+
+
+     var finaldownloadurl = upload_download_url+"fileName="+custname+"&operation=download"
+     var xhttp3 = new XMLHttpRequest();
+     xhttp3.onreadystatechange = function() {
+                console.log(this.readyState);
+                var download_percent=this.readyState*25;
+                var download_status="Preparing for download... "+download_percent+"% complete...";
+                document.getElementById('downloadlink').innerHTML = download_status;
+                document.getElementById('spinningwheel').style.display="block"
+                if (this.readyState == 4 && this.status == 200) {
+                    inspectme = this.responseText;
+                    successcode = JSON.parse(JSON.parse(inspectme)['body'])['successcode'];
+                    console.log(inspectme);
+                    if (successcode != "2"){
+                      returndata=JSON.parse(JSON.parse(inspectme)['body'])['returndata'];
+                      console.log(returndata);
+                      document.getElementById('spinningwheel').style.display="none"
+                      document.getElementById('downloadlink').innerHTML = "<a href="+returndata+">Click here to download the SVG of "+origname+"</a>";//"<img src="+returndata+"></br></br> Right click > Save As '"+origname+"'.svg";//"<a href="+returndata+">"+origname+"</a>";
+
+                    }
+
+                }
+            };
+
+      xhttp3.open("GET", finaldownloadurl, true);
+      xhttp3.send();
+
+     }
+
+
+    function process_image(keyname, bucketname, originalname){
+      var finalprocessurl = process_url+"fileName="+keyname+"&bucketName="+bucketname;
+      var xhttp2 = new XMLHttpRequest();
+      xhttp2.onreadystatechange = function() {
+                 console.log(this.readyState);
+                 var process_percent=this.readyState*25;
+                 var process_status="Processing... "+process_percent+"% complete...";
+                 document.getElementById('downloadlink').innerHTML = process_status;
+                 document.getElementById('spinningwheel').style.display="block"
+                 if (this.readyState == 4 && this.status == 200) {
+                     inspectme = this.responseText;
+                     successcode = JSON.parse(JSON.parse(inspectme)['body'])['successcode'];
+                     console.log(inspectme);
+                     if (successcode == "1"){
+                       //now we want to call the download function...
+                       download_image(originalname, keyname);
+                     }
+                 }
+             };
+       xhttp2.open("GET", finalprocessurl, true);
+       xhttp2.send();
+     }
+
+
+    function convert_image(event)
+    {
+     var reader = new FileReader();
+     var originalfilename = event.target.files[0].name;
+     var customfilename=createGuid();
+     customfilename=customfilename+".svg"
+     var finaluploadurl = upload_download_url+"fileName="+customfilename+"&operation=upload"
+     var xhttp = new XMLHttpRequest();
+     xhttp.onreadystatechange = function() {
+                console.log(this.readyState);
+                var upload_percent=this.readyState*25;
+                var upload_status="Uploading... "+upload_percent+"% complete...";
+                document.getElementById('downloadlink').innerHTML = upload_status;
+                document.getElementById('spinningwheel').style.display="block"
+                if (this.readyState == 4 && this.status == 200) {
+                    inspectme = this.responseText;
+                    successcode = JSON.parse(JSON.parse(inspectme)['body'])['successcode'];
+                    console.log(inspectme);
+                    if (successcode != "2"){
+                      returndata=JSON.parse(JSON.parse(inspectme)['body'])['returndata'];
+                      console.log(returndata);
+                      var file = event.target.files[0];
+                      console.log(file);
+                      document.getElementById('hiddenfilename').value=returndata["fields"]["key"];
+                      document.getElementById('hiddenkeyid').value=returndata["fields"]["AWSAccessKeyId"];
+                      document.getElementById('hiddenpolicy').value=returndata["fields"]["policy"];
+                      document.getElementById('hiddensignature').value=returndata["fields"]["signature"];
+                      document.getElementById('hidden-amz-token').value=returndata["fields"]["x-amz-security-token"];
+                      document.getElementById('submitform').action=returndata['url'];
+                      document.getElementById('submitform').submit();
+                      document.getElementById('hiddenfilename').value="CLEARED";
+                      document.getElementById('hiddenkeyid').value="CLEARED";
+                      document.getElementById('hiddenpolicy').value="CLEARED";
+                      document.getElementById('hiddensignature').value="CLEARED";
+                      document.getElementById('hidden-amz-token').value="CLEARED";
+                      document.getElementById('submitform').action="CLEARED";
+                      wait(5000);
+                      process_image(customfilename, "demo-svgconverter-bucket", originalfilename);
+                    }
+                }
+            };
+     reader.onload = function()
+     {
+      var output = document.getElementById('output_image');
+      var printContents = reader.result;
+      xhttp.open("GET", finaluploadurl, true);
+      xhttp.send();
+      output.src = reader.result;
+     }
+     reader.readAsDataURL(event.target.files[0]);
+    }
+
+        </script>
+
+    </head>
+
+    <body>
+
+
+
+
+<b>Welcome to the image to SVG Online conversion tool! Select a JPG or PNG which you would like to convert to an SVG and upload it.</b>
+</br>
+Within moments you will have a Cricut-compatible SVG which you can download and use!
+</br>
+</br>
+Image to convert:
+<div id="imageupload">
+
+<img id="output_image"/>
+</div>
+</br>
+
+<form action="URL_VALUE" method="post" enctype="multipart/form-data" id="submitform">
+      <!-- Copy the 'fields' key:values returned by S3Client.generate_presigned_post() -->
+      <input type="hidden" name="key" value="VALUE" id="hiddenfilename"/>
+      <input type="hidden" name="AWSAccessKeyId" value="VALUE" id="hiddenkeyid"/>
+      <input type="hidden" name="policy" value="VALUE" id="hiddenpolicy"/>
+      <input type="hidden" name="signature" value="VALUE" id="hiddensignature"/>
+      <input type="hidden" name="x-amz-security-token" id="hidden-amz-token" />
+
+      <input type="file" accept="image/*" onchange="convert_image(event)" id="imageupload" name="file">
+    </form>
+</br>
+Status:
+</br>
+<div id="spinningwheel" style="display:none">
+<img src="https://media.giphy.com/media/Z8MYSDbE8VFqo/giphy.gif"></img>
+</div>
+<div id="downloadlink"></div>
+
+    </body>
+
+</html>
