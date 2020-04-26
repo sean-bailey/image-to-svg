@@ -155,4 +155,4 @@ In the processfunction API, create a GET method, modify the Mapping template to 
 }
 ```
 
-Once you have your final API Gateway endpoints, go to the `index.html` file in the root of this directory, modify it appropriately, then upload it to your S3 bucket. In your bucket, make sure the file is public. You can then access it from your browser and begin processing JPGs and PNGs into SVGs!
+Once you have your final API Gateway endpoints, go to the `index.html` file in the root of this directory, modify the `upload_download_url` and `process_url` variables to match their respective API Gateway Endpoints, then upload it to your S3 bucket. In your bucket, make sure the file is public. You can then access it from your browser and begin processing JPGs and PNGs into SVGs!
