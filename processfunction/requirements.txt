@@ -9,4 +9,4 @@ python-lambda==3.2.6
 PyYAML==5.3
 s3transfer==0.3.3
 six==1.14.0
-urllib3==1.25.8
+urllib3==1.26.5
